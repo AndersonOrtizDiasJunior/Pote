@@ -7,6 +7,14 @@ import { Button } from '../ui/Button'
 
 export interface DrawResultProps {
   movie: Movie
+  /**
+   * `false` quando este e o unico filme disponivel para sorteio. Nesse caso
+   * "Sortear novamente" so devolveria o mesmo filme, entao damos a explicacao
+   * no lugar do botao.
+   */
+  canDrawAgain: boolean
+  /** Texto exibido quando `canDrawAgain` e `false`. */
+  drawAgainHint: string
   onToggleWatched: (id: string) => void
   onDrawAgain: () => void
   onOpenDetails: (movie: Movie) => void
@@ -20,6 +28,8 @@ export interface DrawResultProps {
  */
 export function DrawResult({
   movie,
+  canDrawAgain,
+  drawAgainHint,
   onToggleWatched,
   onDrawAgain,
   onOpenDetails,
@@ -105,10 +115,16 @@ export function DrawResult({
         </div>
       </div>
 
-      <Button variant="secondary" size="lg" className="mt-10" onClick={onDrawAgain}>
-        <Dices aria-hidden="true" className="size-5" />
-        Sortear novamente
-      </Button>
+      {canDrawAgain ? (
+        <Button variant="secondary" size="lg" className="mt-10" onClick={onDrawAgain}>
+          <Dices aria-hidden="true" className="size-5" />
+          Sortear novamente
+        </Button>
+      ) : (
+        <p className="text-pote-subtle mt-10 max-w-sm text-center text-sm leading-relaxed">
+          {drawAgainHint}
+        </p>
+      )}
     </div>
   )
 }

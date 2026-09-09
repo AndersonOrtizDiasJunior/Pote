@@ -40,7 +40,7 @@ describe('drawMovie', () => {
 
   it('sorteia sempre dentro da categoria escolhida', () => {
     for (let i = 0; i < 300; i += 1) {
-      const drawn = drawMovie(jar, 'Terror')
+      const drawn = drawMovie(jar, { genre: 'Terror' })
       expect(drawn).not.toBeNull()
       expect(drawn?.genres).toContain('Terror')
       expect(drawn?.watched).toBe(false)
@@ -48,7 +48,7 @@ describe('drawMovie', () => {
   })
 
   it('devolve null quando a categoria nao tem filmes disponiveis', () => {
-    expect(drawMovie(jar, 'Comédia')).toBeNull()
+    expect(drawMovie(jar, { genre: 'Comédia' })).toBeNull()
   })
 
   it('devolve null quando todos os filmes ja foram assistidos', () => {
@@ -67,5 +67,58 @@ describe('drawMovie', () => {
       if (drawn) seen.add(drawn.title)
     }
     expect(seen).toEqual(new Set(['Duna', 'O Iluminado', 'Hereditário']))
+  })
+})
+
+describe('drawMovie - "Sortear novamente" nao repete o filme da tela', () => {
+  it('nunca devolve o filme excluido quando existe outro candidato', () => {
+    const current = jar[0] // Duna
+    for (let i = 0; i < 500; i += 1) {
+      expect(drawMovie(jar, { excludeId: current?.id })?.id).not.toBe(current?.id)
+    }
+  })
+
+  it('respeita a exclusao tambem dentro de uma categoria', () => {
+    const current = jar[1] // O Iluminado (Terror)
+    for (let i = 0; i < 500; i += 1) {
+      const drawn = drawMovie(jar, { genre: 'Terror', excludeId: current?.id })
+      expect(drawn?.id).not.toBe(current?.id)
+      expect(drawn?.genres).toContain('Terror')
+    }
+  })
+
+  it('continua uniforme entre os candidatos restantes', () => {
+    const seen = new Set<string>()
+    for (let i = 0; i < 1000; i += 1) {
+      const drawn = drawMovie(jar, { excludeId: jar[0]?.id })
+      if (drawn) seen.add(drawn.title)
+    }
+    expect(seen).toEqual(new Set(['O Iluminado', 'Hereditário']))
+  })
+
+  it('repete quando o excluido e o UNICO candidato (melhor que devolver nada)', () => {
+    const single = [makeMovie({ title: 'Duna', providerId: '1', genres: ['Aventura'] })]
+    const drawn = drawMovie(single, { excludeId: single[0]?.id })
+    expect(drawn?.id).toBe(single[0]?.id)
+  })
+
+  it('ignora um excludeId que nao esta entre os candidatos', () => {
+    const drawn = drawMovie(jar, { excludeId: 'provider:inexistente' })
+    expect(drawn).not.toBeNull()
+    expect(drawn?.watched).toBe(false)
+  })
+
+  it('devolve null se nao ha candidatos, mesmo com excludeId', () => {
+    expect(drawMovie(jar, { genre: 'Comédia', excludeId: jar[0]?.id })).toBeNull()
+  })
+
+  it('uma sequencia de sorteios nunca tem dois iguais seguidos', () => {
+    let previous: string | null = null
+    for (let i = 0; i < 400; i += 1) {
+      const drawn = drawMovie(jar, { excludeId: previous })
+      expect(drawn).not.toBeNull()
+      expect(drawn?.id).not.toBe(previous)
+      previous = drawn?.id ?? null
+    }
   })
 })

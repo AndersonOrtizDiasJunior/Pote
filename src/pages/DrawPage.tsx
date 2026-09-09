@@ -26,7 +26,7 @@ export function DrawPage({ onGoToSearch, onGoToMovies }: DrawPageProps) {
     total,
     unwatchedCount,
     drawableGenres,
-    getUnwatchedMovies,
+    getDrawCandidates,
     getRandomMovieByGenre,
     toggleWatched,
     movies,
@@ -54,21 +54,31 @@ export function DrawPage({ onGoToSearch, onGoToMovies }: DrawPageProps) {
    */
   const drawn = drawnId === null ? null : (movies.find((movie) => movie.id === drawnId) ?? null)
 
+  /**
+   * Vale a pena sortear de novo?
+   *
+   * Nao basta contar candidatos: se o filme na tela ja foi marcado como
+   * assistido, ele saiu da disputa e um unico candidato restante ainda e um
+   * sorteio util. A pergunta certa e "existe candidato diferente do exibido?".
+   */
+  const canDrawAgain = getDrawCandidates(genre).some((movie) => movie.id !== drawnId)
+
   const handleDraw = useCallback(() => {
     clearTimers()
     setNoneInGenre(false)
+
+    // O filme que esta na tela sai da roleta: "Sortear novamente" precisa
+    // mudar de resultado, senao parece que o botao nao fez nada.
+    const winner = getRandomMovieByGenre(genre, drawnId)
     setDrawnId(null)
 
-    const winner = getRandomMovieByGenre(genre)
     if (!winner) {
       setNoneInGenre(true)
       return
     }
 
     // Sorteia primeiro, depois anima: a animacao e enfeite, nao o sorteio.
-    const pool = genre === null
-      ? getUnwatchedMovies()
-      : getUnwatchedMovies().filter((movie) => movie.genres.includes(genre))
+    const pool = getDrawCandidates(genre)
 
     const ticks = Math.max(1, Math.floor(ROLL_DURATION_MS / ROLL_TICK_MS))
     const sequence = pickRandomSequence(pool, ticks)
@@ -89,7 +99,7 @@ export function DrawPage({ onGoToSearch, onGoToMovies }: DrawPageProps) {
         setDrawing(false)
       }, ROLL_DURATION_MS),
     )
-  }, [clearTimers, genre, getRandomMovieByGenre, getUnwatchedMovies])
+  }, [clearTimers, drawnId, genre, getDrawCandidates, getRandomMovieByGenre])
 
   function handleGenreChange(next: string | null) {
     clearTimers()
@@ -203,6 +213,12 @@ export function DrawPage({ onGoToSearch, onGoToMovies }: DrawPageProps) {
             <div className="mt-10">
               <DrawResult
                 movie={drawn}
+                canDrawAgain={canDrawAgain}
+                drawAgainHint={
+                  genre === null
+                    ? 'Este é o único filme disponível para sorteio. Adicione mais filmes ao pote para sortear de novo.'
+                    : `Este é o único filme não assistido na categoria "${genre}". Escolha outra categoria para sortear de novo.`
+                }
                 onToggleWatched={toggleWatched}
                 onDrawAgain={handleDraw}
                 onOpenDetails={setDetails}

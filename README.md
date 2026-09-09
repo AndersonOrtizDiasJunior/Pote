@@ -19,6 +19,7 @@ Sem login, sem banco de dados, sem backend — tudo fica no seu navegador.
 - 🗑️ **Remover** filmes, com diálogo de confirmação
 - 🔀 **Filtros**: todos, não assistidos, assistidos
 - 🎲 **Sorteio aleatório e imparcial**, sempre entre os filmes **não assistidos**
+- 🔁 **"Sortear novamente" nunca repete** o filme que está na tela
 - 🏷️ **Sorteio por categoria**, com as categorias tiradas dos filmes que estão no pote
 - 💾 **Persistência** em `localStorage` — os filmes sobrevivem ao refresh
 - ♿ **Acessibilidade**: navegação por teclado, foco visível, `aria-label`, modais com
@@ -261,6 +262,14 @@ C:\Pote
 - **Sorteio antes da animação.** O vencedor é escolhido por
   `Math.floor(Math.random() * candidatos.length)`; a animação de ~1,5 s é enfeite. Não há
   peso por nota, por data de lançamento nem por ordem de entrada no pote.
+- **"Sortear novamente" exclui o filme exibido.** Um sorteio puramente uniforme repete o
+  resultado anterior com frequência `1/n` — num pote de 3 filmes, uma vez a cada três
+  cliques, e o botão parece quebrado. Por isso o filme que está na tela sai da disputa.
+  Isso **não** torna o sorteio tendencioso: entre os candidatos restantes a chance
+  continua igual para todos; a única regra adicional é que dois sorteios seguidos não
+  caem no mesmo filme. Quando o filme exibido é o **único** candidato, o botão dá lugar a
+  uma explicação em vez de repetir. E se ele foi marcado como assistido, sai da disputa
+  sozinho — aí um único candidato restante ainda rende um sorteio útil.
 - **A regra do sorteio mora em `utils/draw.ts`**, fora do React, para poder ser testada
   diretamente.
 - **`prefers-reduced-motion`** desliga as animações.

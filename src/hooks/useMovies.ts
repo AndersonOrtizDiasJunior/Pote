@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import * as movieStorage from '../storage/movieStorage'
 import type { Movie } from '../types/movie'
-import { drawMovie } from '../utils/draw'
+import { drawMovie, getDrawableMovies } from '../utils/draw'
 import { collectGenres } from '../utils/genres'
 import { findExistingMovie } from '../utils/identity'
 
@@ -29,8 +29,10 @@ export interface UseMoviesResult {
   hasMovie: (candidate: { imdbId?: string; id?: string; title: string; year?: number }) => boolean
   getUnwatchedMovies: () => Movie[]
   getMoviesByGenre: (genre: string) => Movie[]
-  getRandomMovie: () => Movie | null
-  getRandomMovieByGenre: (genre: string | null) => Movie | null
+  /** Candidatos ao sorteio: nao assistidos, opcionalmente de um genero. */
+  getDrawCandidates: (genre?: string | null) => Movie[]
+  getRandomMovie: (excludeId?: string | null) => Movie | null
+  getRandomMovieByGenre: (genre: string | null, excludeId?: string | null) => Movie | null
 }
 
 /**
@@ -101,11 +103,25 @@ export function useMovies(): UseMoviesResult {
     [movies],
   )
 
-  /** Sorteio: apenas filmes nao assistidos, todos com a mesma chance. */
-  const getRandomMovie = useCallback(() => drawMovie(movies), [movies])
+  const getDrawCandidates = useCallback(
+    (genre: string | null = null) => getDrawableMovies(movies, genre),
+    [movies],
+  )
+
+  /**
+   * Sorteio: apenas filmes nao assistidos, todos com a mesma chance.
+   *
+   * `excludeId` tira da roleta o filme que ja esta na tela, para que
+   * "Sortear novamente" sempre mude de resultado.
+   */
+  const getRandomMovie = useCallback(
+    (excludeId: string | null = null) => drawMovie(movies, { excludeId }),
+    [movies],
+  )
 
   const getRandomMovieByGenre = useCallback(
-    (genre: string | null) => drawMovie(movies, genre),
+    (genre: string | null, excludeId: string | null = null) =>
+      drawMovie(movies, { genre, excludeId }),
     [movies],
   )
 
@@ -124,6 +140,7 @@ export function useMovies(): UseMoviesResult {
     hasMovie,
     getUnwatchedMovies,
     getMoviesByGenre,
+    getDrawCandidates,
     getRandomMovie,
     getRandomMovieByGenre,
   }
