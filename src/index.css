@@ -1,0 +1,112 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Tema
+   Dark mode como padrao, com um acento ambar (a cor do pote).
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-pote-bg: #0a0a11;
+  --color-pote-surface: #14141f;
+  --color-pote-elevated: #1c1c2b;
+  --color-pote-border: #2a2a3d;
+  --color-pote-border-strong: #3d3d55;
+  --color-pote-text: #edeef4;
+  --color-pote-muted: #9d9db4;
+  --color-pote-subtle: #6e6e86;
+  --color-pote-accent: #f5b642;
+  --color-pote-accent-strong: #e19c1c;
+  --color-pote-accent-soft: #3a2c10;
+  --color-pote-success: #4ade80;
+  --color-pote-danger: #f87171;
+
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --radius-card: 1rem;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-pote-bg text-pote-text font-sans antialiased;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  /* Foco visivel e consistente: navegacao por teclado precisa ser obvia. */
+  :focus-visible {
+    @apply outline-pote-accent outline-2 outline-offset-2;
+  }
+
+  ::selection {
+    @apply bg-pote-accent text-pote-bg;
+  }
+}
+
+@layer utilities {
+  /* Rolagem vertical da animacao de sorteio. */
+  @keyframes pote-scroll {
+    0% {
+      transform: translateY(0.4rem);
+      opacity: 0;
+    }
+    25% {
+      opacity: 1;
+    }
+    75% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-0.4rem);
+      opacity: 0;
+    }
+  }
+
+  @keyframes pote-rise {
+    from {
+      transform: translateY(0.75rem);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes pote-shake {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(-7deg);
+    }
+    75% {
+      transform: rotate(7deg);
+    }
+  }
+
+  .animate-pote-scroll {
+    animation: pote-scroll 220ms ease-in-out;
+  }
+
+  .animate-pote-rise {
+    animation: pote-rise 320ms ease-out both;
+  }
+
+  .animate-pote-shake {
+    animation: pote-shake 380ms ease-in-out infinite;
+  }
+
+  /* Respeita quem pediu menos movimento. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-pote-scroll,
+    .animate-pote-rise,
+    .animate-pote-shake {
+      animation: none !important;
+    }
+  }
+}
