@@ -9,7 +9,8 @@ export function RatingBadge({ rating }: { rating: number }) {
     >
       <Star aria-hidden="true" className="size-3.5 fill-current" />
       <span className="tabular-nums">{rating.toFixed(1)}</span>
-      <span className="sr-only">de 10</span>
+      {/* Espaco antes de "de": sem ele o leitor de tela junta "8.5de 10". */}
+      <span className="sr-only">&nbsp;de 10</span>
     </span>
   )
 }
