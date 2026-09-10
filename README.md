@@ -162,6 +162,44 @@ npm run build     # typecheck (tsc -b) + build de produção em dist/
 npm run preview   # serve o build gerado
 ```
 
+## Deploy (GitHub Pages)
+
+O site é estático — não há servidor, então **não é preciso Render, Vercel nem um
+segundo repositório**. O workflow `.github/workflows/deploy.yml` roda lint, testes e
+build a cada push em `master` e publica a pasta `dist/`.
+
+Duas configurações no repositório:
+
+1. **Settings → Secrets and variables → Actions → New repository secret**
+   Nome `VITE_TMDB_API_KEY`, valor = sua chave. Sem o secret o build passa mesmo assim,
+   e o site publicado entra em modo demonstração.
+2. **Settings → Pages → Source: GitHub Actions.**
+   O workflow tenta ajustar isso sozinho (`enablement: true`), mas confira.
+
+> ⚠️ Se o Pages ficar em *Deploy from a branch*, o GitHub serve o `index.html` do
+> código-fonte, que aponta para `/src/main.tsx` — um arquivo TypeScript que o navegador
+> não executa. O resultado é uma **tela branca**. A origem precisa ser *GitHub Actions*.
+
+### Caminho base
+
+Num repositório de projeto o site fica em `https://<usuário>.github.io/<repo>/`, e não
+na raiz do domínio. Por isso o `vite.config.ts` lê `BASE_PATH`, que o workflow preenche
+a partir do `configure-pages`. Localmente a variável não existe e o base continua `/`,
+então `npm run dev` e `npm run build` funcionam sem configuração nenhuma.
+
+> No Git Bash do Windows, `BASE_PATH=/Pote/ npm run build` é reescrito pelo MSYS para um
+> caminho do Windows. Use `MSYS_NO_PATHCONV=1` na frente se precisar reproduzir o build
+> do Pages localmente.
+
+### A chave fica visível no site publicado
+
+O Vite embute `VITE_TMDB_API_KEY` no JavaScript do build. Guardar a chave como secret
+mantém ela fora do repositório, **mas ela é legível no bundle servido** — isso é
+inerente a qualquer site estático. Para a chave v3 do TMDB isso é o uso previsto (é um
+identificador de cliente, não dá acesso à conta e não permite escrita), mas a cota é
+sua: se quiser escondê-la de verdade, seria necessário um proxy com a chave no
+servidor, e aí o site deixa de ser puramente estático.
+
 ## Testes e lint
 
 ```bash

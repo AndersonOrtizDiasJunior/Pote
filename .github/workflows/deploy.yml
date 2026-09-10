@@ -1,0 +1,74 @@
+name: Deploy no GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  # Permite disparar o deploy manualmente pela aba Actions.
+  workflow_dispatch:
+
+# Permissoes exigidas pelo deploy oficial de Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Um deploy por vez. `cancel-in-progress: false` para nao abortar um deploy
+# que ja esta publicando no meio do caminho.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Testes
+        run: npm test
+
+      - uses: actions/configure-pages@v5
+        id: pages
+        with:
+          # Troca a origem do Pages para "GitHub Actions" automaticamente.
+          # Sem isso, o Pages continuaria servindo o codigo-fonte do branch -
+          # ou seja, o index.html de desenvolvimento, que pede /src/main.tsx e
+          # resulta em tela branca.
+          enablement: true
+
+      - name: Build
+        env:
+          # Chave gratuita do TMDB, guardada em Settings > Secrets > Actions.
+          # Ela e embutida no bundle: e o modelo de uso da chave v3, que e um
+          # identificador de cliente e nao da acesso a conta. Sem o secret o
+          # build ainda passa - o site so entra em modo demonstracao.
+          VITE_TMDB_API_KEY: ${{ secrets.VITE_TMDB_API_KEY }}
+          # `base_path` vem do configure-pages (ex.: "/Pote").
+          # A barra final importa para o Vite montar as URLs dos assets.
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
