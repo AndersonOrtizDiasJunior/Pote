@@ -41,10 +41,17 @@ jobs:
       - uses: actions/configure-pages@v5
         id: pages
         with:
-          # Troca a origem do Pages para "GitHub Actions" automaticamente.
-          # Sem isso, o Pages continuaria servindo o codigo-fonte do branch -
-          # ou seja, o index.html de desenvolvimento, que pede /src/main.tsx e
-          # resulta em tela branca.
+          # Liga o Pages caso ele ainda nao exista no repositorio.
+          #
+          # ATENCAO: isso NAO troca a origem de um Pages ja existente. Se o
+          # repositorio estiver em "Deploy from a branch", o GitHub continua
+          # rodando o builder proprio ("pages build and deployment") e servindo
+          # o codigo-fonte do branch - o index.html de desenvolvimento, que
+          # pede /src/main.tsx e da tela branca. O artefato deste workflow e
+          # publicado, mas ignorado.
+          #
+          # A troca e manual, uma unica vez:
+          #   Settings > Pages > Source: GitHub Actions
           enablement: true
 
       - name: Build

@@ -173,12 +173,19 @@ Duas configurações no repositório:
 1. **Settings → Secrets and variables → Actions → New repository secret**
    Nome `VITE_TMDB_API_KEY`, valor = sua chave. Sem o secret o build passa mesmo assim,
    e o site publicado entra em modo demonstração.
-2. **Settings → Pages → Source: GitHub Actions.**
-   O workflow tenta ajustar isso sozinho (`enablement: true`), mas confira.
+2. **Settings → Pages → Source: `GitHub Actions`.** Passo obrigatório e manual.
 
-> ⚠️ Se o Pages ficar em *Deploy from a branch*, o GitHub serve o `index.html` do
-> código-fonte, que aponta para `/src/main.tsx` — um arquivo TypeScript que o navegador
-> não executa. O resultado é uma **tela branca**. A origem precisa ser *GitHub Actions*.
+> ⚠️ **A causa mais comum de tela branca.** Se o Pages ficar em *Deploy from a branch*,
+> o GitHub serve o `index.html` do código-fonte, que aponta para `/src/main.tsx` — um
+> arquivo TypeScript que o navegador não executa.
+>
+> O `enablement: true` do `configure-pages` apenas **liga** o Pages quando ele ainda não
+> existe; ele **não troca** a origem de um Pages já configurado por branch. Nesse caso o
+> GitHub roda o builder próprio (a execução `pages build and deployment` aparece junto na
+> aba Actions) e o artefato deste workflow é publicado, porém ignorado.
+>
+> Depois de trocar a origem, rode o workflow de novo: **Actions → Deploy no GitHub Pages
+> → Run workflow**.
 
 ### Caminho base
 
